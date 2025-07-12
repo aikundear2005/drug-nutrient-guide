@@ -134,9 +134,15 @@
             font-weight: 600;
             border: 1px solid #e9ecef;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            min-height: 60px;
+            gap: 8px;
+            min-height: 80px;
+        }
+
+        .search-item .icon {
+            font-size: 1.5rem;
         }
         
         .search-item:hover {
@@ -172,7 +178,8 @@
         
         .result-card.drug-card { border-color: #74b9ff; }
         .result-card.symptom-card { border-color: #f0932b; }
-        .result-card.nutrient-card { border-color: #55efc4; background-color: #f1fef9; } /* 營養素卡片特別使用淺綠色底 */
+        .result-card.nutrient-card { border-color: #55efc4; background-color: #f1fef9; }
+        .result-card.natural-card { border-color: #a29bfe; background-color: #f5f3ff; }
         
         .result-card h3 {
             font-size: 1.5rem;
@@ -180,6 +187,9 @@
             padding-bottom: 10px;
             color: var(--text-dark);
             border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
         
         .result-card h4 {
@@ -203,7 +213,7 @@
             border-bottom: none;
         }
 
-        .food-list {
+        .food-list, .natural-prescription-list {
             list-style: none;
             padding-left: 0;
             margin-top: 10px;
@@ -212,7 +222,7 @@
             gap: 8px;
         }
 
-        .food-list li {
+        .food-list li, .natural-prescription-list li {
             background: #e9ecef;
             color: var(--text-light);
             padding: 5px 12px;
@@ -288,9 +298,10 @@
         </div>
         
         <div class="search-tabs">
-            <button class="tab-button active" onclick="showTab(event, 'drugs')">🔍 依藥物查詢</button>
+            <button class="tab-button active" onclick="showTab(event, 'drugs')">💊 依藥物查詢</button>
             <button class="tab-button" onclick="showTab(event, 'symptoms')">🩺 依症狀查詢</button>
             <button class="tab-button" onclick="showTab(event, 'nutrients')">🌿 依營養素查詢</button>
+            <button class="tab-button" onclick="showTab(event, 'natural')">🧘‍♀️ 自然處方箋</button>
         </div>
         
         <div class="search-content">
@@ -311,6 +322,12 @@
                 <div class="search-grid" id="nutrient-grid">
                      </div>
             </div>
+
+            <div id="natural" class="search-section">
+                <h2>選擇您想了解的自然處方箋</h2>
+                <div class="search-grid" id="natural-grid">
+                     </div>
+            </div>
         </div>
         
         <div id="results" class="results-section">
@@ -328,6 +345,79 @@
         // --- 資料庫開始 ---
 
         const db = {
+            // --- 修改：擴充自然處方箋資料庫，加入時機與注意事項 ---
+            naturalPrescriptions: {
+                '規律散步': {
+                    icon: '🚶‍♀️',
+                    importance: '最簡單有效的有氧運動，能促進血液循環、強化心肺功能、幫助控制體重，並透過溫和的負重刺激骨骼，維持骨密度。散步時身體會釋放腦內啡，有助於改善情緒、減輕壓力。',
+                    deficiencySymptoms: ['血液循環不佳、手腳冰冷', '心情低落、易怒', '體重增加', '肌力衰退', '骨質流失風險增加'],
+                    prescription: {
+                        where: ['住家附近的公園', '河濱步道', '學校操場', '較無車輛的巷弄'],
+                        howLong: '建議每週3-5次，每次至少30分鐘，速度以能稍微喘氣但仍可說話為佳。'
+                    },
+                    timingAndPrecautions: {
+                        timing: '清晨或傍晚氣溫較舒適時。飯後一小時散步有助於血糖穩定。',
+                        preparation: '穿著舒適、合腳的運動鞋。攜帶足夠的水、帽子或陽傘。',
+                        reminders: '注意地面是否平坦，避免在濕滑或不平的地面行走。天氣不佳（如大雨、酷暑）時應避免。聆聽身體的聲音，若感不適應立即休息。'
+                    }
+                },
+                '陽光曝曬': {
+                    icon: '☀️',
+                    importance: '人體合成維生素D的最主要來源。維生素D對鈣質吸收、骨骼健康、免疫系統調節至關重要。陽光也能促進大腦分泌血清素，有助於改善情緒、對抗憂鬱，並穩定生理時鐘。',
+                    deficiencySymptoms: ['骨質疏鬆、肌肉無力', '免疫力下降、容易感冒', '季節性情緒失調 (SAD)', '憂鬱傾向', '睡眠品質不佳'],
+                    prescription: {
+                        where: ['任何能接觸到陽光的戶外空間，如陽台、公園、戶外座位區'],
+                        howLong: '每天15-20分鐘，讓手臂、腿部等肌膚接受日照。'
+                    },
+                    timingAndPrecautions: {
+                        timing: '上午9-10點或下午3-4點的陽光較溫和，是最佳時機。請務必避開上午10點至下午2點的烈日。',
+                        preparation: '可適度塗抹防曬乳於臉部等較脆弱肌膚，但主要曝曬的四肢可不必塗抹，以免影響合成效率。',
+                        reminders: '皮膚較白皙或敏感者，應從較短時間開始（如5-10分鐘）。若皮膚出現泛紅或不適，應立即停止。'
+                    }
+                },
+                '森林浴': {
+                    icon: '🌳',
+                    importance: '走入森林或綠意盎然的環境中，能有效降低壓力荷爾蒙(皮質醇)、降低血壓與心率。植物釋放的芬多精更能提升人體免疫系統中「自然殺手細胞」的活性，有助於對抗病毒與癌細胞。',
+                    deficiencySymptoms: ['長期處於高壓狀態', '焦慮、注意力不集中', '高血壓', '與大自然疏離感'],
+                    prescription: {
+                        where: ['郊區的森林步道', '大型且樹木密集的公園 (如高雄衛武營、台北大安森林公園)'],
+                        howLong: '建議每週至少1-2小時。放慢腳步，用五官感受周遭環境，深呼吸。'
+                    },
+                    timingAndPrecautions: {
+                        timing: '任何天氣涼爽的時段皆可。雨後的森林空氣特別清新，但需注意路滑。',
+                        preparation: '穿著防滑的鞋子與長袖衣褲以防蚊蟲。攜帶飲用水。',
+                        reminders: '注意天氣變化，天色昏暗時應避免入山。對花粉過敏者需注意季節。保持對環境的尊重，不留下垃圾。'
+                    }
+                },
+                '充足睡眠': {
+                    icon: '😴',
+                    importance: '睡眠是身體進行修復、鞏固記憶、調節荷爾蒙及清除大腦代謝廢物的關鍵時刻。長期擁有良好睡眠品質，是維持身心健康、認知功能與免疫力的基石。',
+                    deficiencySymptoms: ['白天精神不濟、腦霧', '記憶力、專注力下降', '情緒不穩、易怒', '免疫力下降', '對甜食與垃圾食物的渴望增加'],
+                    prescription: {
+                        where: ['家中安靜、陰暗且涼爽的臥室'],
+                        howLong: '成人建議每晚7-9小時。建立固定的睡前儀式、避免睡前使用3C產品、維持規律的就寢與起床時間。'
+                    },
+                    timingAndPrecautions: {
+                        timing: '建立固定的就寢與起床時間，即使是週末也盡量維持。',
+                        preparation: '睡前1-2小時可進行溫和的放鬆活動，如溫水泡腳、閱讀、聽輕音樂。確保臥室完全黑暗，可使用遮光窗簾或眼罩。',
+                        reminders: '避免在睡前攝取咖啡因、酒精或大量進食。若躺床超過20分鐘仍無法入睡，可起床做些溫和活動，直到有睡意再回床上。'
+                    }
+                },
+                '正念冥想': {
+                    icon: '🧘‍♂️',
+                    importance: '透過專注於當下的呼吸或感受，訓練大腦減少思緒漫遊，能有效降低焦慮與壓力。長期練習有助於改善情緒調節能力、提升專注力，並增加對身心狀態的覺察力。',
+                    deficiencySymptoms: ['思緒混亂、無法平靜', '長期焦慮、恐慌', '情緒反應過度', '難以專心', '對壓力敏感'],
+                    prescription: {
+                        where: ['任何不會被打擾的安靜角落'],
+                        howLong: '每天從5-10分鐘開始練習。可以專注於呼吸的進出，當思緒飄走時，溫柔地把它帶回呼吸上即可。'
+                    },
+                    timingAndPrecautions: {
+                        timing: '早晨起床後有助於穩定一天的情緒。睡前練習有助於放鬆入眠。任何感到壓力的時候，都可以進行幾分鐘的短暫練習。',
+                        preparation: '找一個舒適的姿勢，可以坐著或躺著，保持背部挺直但放鬆。',
+                        reminders: '正念的重點不是「沒有雜念」，而是「覺察到雜念並溫柔地回來」，對自己保持耐心與不批判的態度。'
+                    }
+                }
+            },
             drugs: {
                 '阻酸劑與抗酸劑': {
                     examples: ['奧美拉唑(Omeprazole)', '泮托拉唑(Pantoprazole)', '雷尼替丁(Ranitidine)', '碳酸鈣'],
@@ -338,7 +428,8 @@
                         '補充「鈣」、「鎂」和「維生素D」，以維護骨骼健康。',
                         '補充「鐵」和「鋅」，注意與藥物間隔2小時服用。',
                         '與喹諾酮類抗菌藥、甲狀腺藥物需間隔至少2-4小時服用。'
-                    ]
+                    ],
+                    naturalPrescriptions: ['陽光曝曬', '規律散步'] // 增加骨密度
                 },
                 '止痛藥 (NSAIDs/阿片類)': {
                     examples: ['布洛芬(Ibuprofen)', '萘普生(Naproxen)', '對乙酰氨基酚(Tylenol)', '可待因(Codeine)'],
@@ -349,7 +440,8 @@
                         '補充「維生素C」和「鐵」，但鐵補充劑需與阿司匹林謹慎使用。',
                         '服用阿片類藥物應避免與酒精或鎮靜草藥同服，以免加重呼吸抑制。',
                         '高膳食纖維食物可能延緩藥效，需注意。'
-                    ]
+                    ],
+                    naturalPrescriptions: ['正念冥想', '充足睡眠'] // 幫助疼痛管理與修復
                 },
                 '抗菌藥 (抗生素)': {
                     examples: ['阿莫西林(Amoxicillin)', '阿奇黴素(Azithromycin)', '環丙沙星(Cipro)', '多西環素(Doxycycline)'],
@@ -359,7 +451,8 @@
                         '最重要：在服用抗生素期間和之後補充「益生菌」(與抗生素間隔至少2小時)。',
                         '補充「B群維生素」，因為腸道菌群是B群的製造工廠之一。',
                         '服用四環素或喹諾酮類抗生素，應避免與乳製品、鈣、鐵、鋅補充劑同時服用(至少間隔2-4小時)。'
-                    ]
+                    ],
+                    naturalPrescriptions: ['充足睡眠'] // 幫助免疫系統恢復
                 },
                 '降膽固醇藥 (他汀類)': {
                     examples: ['阿託伐他汀(Lipitor)', '瑞舒伐他汀(Crestor)', '辛伐他汀(Zocor)'],
@@ -370,7 +463,8 @@
                         '補充「維生素D」，缺乏維生素D也可能導致肌肉疼痛。',
                         '避免與葡萄柚/石榴汁同服，以免增加藥物濃度和副作用風險。',
                         '定期監測肝功能和血糖水平。'
-                    ]
+                    ],
+                    naturalPrescriptions: ['規律散步', '陽光曝曬'] // 改善肌肉與心血管健康
                 },
                 '降壓藥': {
                     examples: ['ACE抑制劑(如Lisinopril)', 'β受體阻滯劑(如Metoprolol)', '鈣通道阻滯劑(如Amlodipine)', '利尿劑(見單獨分類)'],
@@ -381,7 +475,8 @@
                         '補充「鋅」，特別是服用ACE抑制劑和利尿劑者。',
                         '補充「褪黑素」和「B群維生素」，可能有助於改善睡眠和精力。',
                         '服用鈣通道阻滯劑時，避免飲用葡萄柚汁。'
-                    ]
+                    ],
+                    naturalPrescriptions: ['森林浴', '正念冥想', '規律散步'] // 協助降低壓力與血壓
                 },
                 '利尿劑': {
                     examples: ['氫氯噻嗪(HCTZ)', '呋塞米(Lasix)', '螺內酯(Spironolactone)'],
@@ -392,7 +487,8 @@
                         '「鎂」的流失非常普遍，補充鎂有助於心血管健康和肌肉功能。',
                         '補充「B群維生素」和「輔酶Q10」，以支持能量代謝。',
                         '服用保鉀利尿劑者，則需小心高血鉀風險，避免額外補鉀。'
-                    ]
+                    ],
+                    naturalPrescriptions: ['規律散步'] // 促進循環
                 },
                 '糖尿病藥物': {
                     examples: ['二甲雙胍(Metformin)', '格列美脲(Glimepiride)', '胰島素(Insulin)'],
@@ -403,7 +499,8 @@
                         '補充「輔酶Q10」，支持心臟健康和能量。',
                         '補充「葉酸」和「維生素B6」，與B12協同作用。',
                         '注意酒精、蘆薈、維生素D等可能增強降糖效果，需監測血糖。'
-                    ]
+                    ],
+                    naturalPrescriptions: ['規律散步', '充足睡眠'] // 改善胰島素敏感性
                 },
                  '雌激素藥物 (避孕藥/HRT)': {
                     examples: ['炔雌醇(Ethinyl Estradiol)', '結合雌激素(Premarin)'],
@@ -414,7 +511,8 @@
                         '補充「鎂」和「鋅」，有助於改善情緒和免疫力。',
                         '補充「硒」和「碘」，支持甲狀腺功能。',
                         '避免與葡萄柚汁同服。'
-                    ]
+                    ],
+                    naturalPrescriptions: ['正念冥想', '規律散步'] // 協助穩定情緒
                 },
                 '抗抑鬱藥 (SSRI/三環類)': {
                     examples: ['舍曲林(Zoloft)', '氟西汀(Fluoxetine)', '阿米替林(Amitriptyline)'],
@@ -425,7 +523,8 @@
                         '可考慮補充「褪黑素」改善睡眠，但需與醫師討論。',
                         '補充「葉酸」和「硒」，對情緒調節有益。',
                         '服用SSRI類藥物應注意咖啡因攝取，可能引發震顫、失眠。'
-                    ]
+                    ],
+                    naturalPrescriptions: ['規律散步', '森林浴', '正念冥想', '充足睡眠', '陽光曝曬'] // 全方位支持身心健康
                 },
                 '類固醇藥物': {
                     examples: ['潑尼松(Prednisone)', '地塞米松(Dexamethasone)', '吸入性布地奈德(Budesonide)'],
@@ -435,7 +534,8 @@
                         '最重要：補充「鈣」、「鎂」和「維生素D」以保護骨骼，預防骨質疏鬆。',
                         '補充「鉀」，因為類固醇會導致鉀流失。',
                         '補充「鋅」、「硒」和「維生素C」以支持被抑制的免疫系統。'
-                    ]
+                    ],
+                    naturalPrescriptions: ['規律散步', '陽光曝曬', '正念冥想'] // 保護骨骼與穩定情緒
                 }
             },
             symptoms: {
@@ -447,7 +547,8 @@
                         { nutrient: '鐵', recommendation: '缺鐵性貧血是疲勞主因之一，可搭配維生素C增加吸收。' },
                         { nutrient: '鎂', recommendation: '參與體內數百種能量反應，缺乏會導致無力。' },
                         { nutrient: '維生素D', recommendation: '確保充足的維生素D水平，與整體活力相關。' }
-                    ]
+                    ],
+                    naturalPrescriptions: ['規律散步', '充足睡眠', '陽光曝曬']
                 },
                 '肌肉疼痛/抽筋': {
                     possibleCauses: ['他汀類藥物 (最常見原因)', '利尿劑 (消耗鉀、鎂)', '類固醇', '營養缺乏：輔酶Q10, 鎂, 鉀, 鈣, 維生素D'],
@@ -456,7 +557,8 @@
                         { nutrient: '鎂', recommendation: '是天然的肌肉鬆弛劑，對各種類型抽筋都有效。' },
                         { nutrient: '鉀', recommendation: '服用利尿劑者需注意補充，以維持電解質平衡。' },
                         { nutrient: '鈣', recommendation: '與維生素D共同作用，維持肌肉正常收縮功能。' }
-                    ]
+                    ],
+                    naturalPrescriptions: ['規律散步']
                 },
                 '記憶力下降/腦霧': {
                     possibleCauses: ['他汀類藥物 (消耗輔酶Q10)', '阻酸劑 (消耗B12)', '抗抑鬱藥', '抗驚厥藥', '營養缺乏：輔酶Q10, 維生素B12, 葉酸, 鎂, Omega-3'],
@@ -465,7 +567,8 @@
                         { nutrient: '輔酶Q10', recommendation: '能穿透血腦屏障，為腦細胞提供能量。' },
                         { nutrient: '鎂', recommendation: '有助於保護大腦功能，穩定神經。' },
                         { nutrient: 'Omega-3', recommendation: '是構成大腦細胞膜的重要成分，支持大腦健康。' }
-                    ]
+                    ],
+                    naturalPrescriptions: ['充足睡眠', '森林浴', '正念冥想']
                 },
                 '消化不良/腹瀉/便秘': {
                     possibleCauses: ['抗菌藥 (破壞腸道菌叢)', '止痛藥 (傷胃)', '阻酸劑 (改變腸道pH值)', '糖尿病藥物(二甲雙胍)', '鐵補充劑', '阿片類止痛藥 (導致便秘)'],
@@ -474,7 +577,8 @@
                         { nutrient: '鋅', recommendation: '有助於修復受損的腸道內壁，改善腹瀉。' },
                         { nutrient: '鎂', recommendation: '有助於緩解便秘問題。' },
                         { nutrient: '膳食纖維', recommendation: '改善便秘，但需確保飲用足夠水份。' }
-                    ]
+                    ],
+                    naturalPrescriptions: ['規律散步', '正念冥想']
                 },
                 '睡眠障礙/失眠': {
                     possibleCauses: ['抗抑鬱藥', '降壓藥 (β受體阻滯劑)', '類固醇', '減充血劑', '營養缺乏：褪黑素, 鎂, B群'],
@@ -482,7 +586,8 @@
                         { nutrient: '鎂', recommendation: '能放鬆神經與肌肉，幫助入睡。' },
                         { nutrient: '褪黑素', recommendation: '多種藥物會抑制其分泌，可從食物中補充或考慮補充劑。' },
                         { nutrient: '維生素B6', recommendation: '是身體製造血清素和褪黑素的輔助因子。' }
-                    ]
+                    ],
+                    naturalPrescriptions: ['充足睡眠', '正念冥想', '陽光曝曬']
                 },
                  '情緒波動/焦慮/抑鬱': {
                     possibleCauses: ['雌激素藥物', '抗抑鬱藥', '類固醇', '精神類藥物', '營養缺乏：鎂, B群 (B6, B9, B12), Omega-3, 維生素D, 硒, 鋅'],
@@ -491,7 +596,8 @@
                         { nutrient: '維生素B群', recommendation: '對神經傳導物質的合成至關重要，特別是B6、葉酸和B12。' },
                         { nutrient: 'Omega-3', recommendation: '已被證實對改善憂鬱情緒有益。' },
                         { nutrient: '維生素D', recommendation: '與大腦中的血清素調節有關，可多曬太陽。' }
-                    ]
+                    ],
+                    naturalPrescriptions: ['森林浴', '正念冥想', '規律散步', '陽光曝曬']
                 },
                 '免疫力下降/頻繁感染': {
                     possibleCauses: ['類固醇', '抗菌藥', '阻酸劑', '雌激素藥物', '營養缺乏：維生素C, 維生素D, 鋅, 硒, 益生菌'],
@@ -500,7 +606,8 @@
                         { nutrient: '維生素D', recommendation: '是重要的免疫調節劑，維持適當水平很重要。' },
                         { nutrient: '鋅', recommendation: '對白血球功能至關重要，能有效對抗病毒。' },
                         { nutrient: '益生菌', recommendation: '人體70%的免疫細胞在腸道，維持腸道健康是關鍵。' }
-                    ]
+                    ],
+                    naturalPrescriptions: ['充足睡眠', '森林浴', '陽光曝曬']
                 }
             },
             nutrients: {
@@ -613,34 +720,64 @@
             const drugGrid = document.getElementById('drug-grid');
             const symptomGrid = document.getElementById('symptom-grid');
             const nutrientGrid = document.getElementById('nutrient-grid');
+            const naturalGrid = document.getElementById('natural-grid');
 
             drugGrid.innerHTML = Object.keys(db.drugs).map(drug => 
-                `<div class="search-item" onclick="showDrugResults('${drug}')">${drug}</div>`
+                `<div class="search-item" onclick="showDrugResults('${drug}')"><span class="icon">💊</span><span>${drug}</span></div>`
             ).join('');
 
             symptomGrid.innerHTML = Object.keys(db.symptoms).map(symptom => 
-                `<div class="search-item" onclick="showSymptomResults('${symptom}')">${symptom}</div>`
+                `<div class="search-item" onclick="showSymptomResults('${symptom}')"><span class="icon">🩺</span><span>${symptom}</span></div>`
             ).join('');
 
             nutrientGrid.innerHTML = Object.keys(db.nutrients).map(nutrient => 
-                `<div class="search-item" onclick="showNutrientResults('${nutrient}')">${nutrient}</div>`
+                `<div class="search-item" onclick="showNutrientResults('${nutrient}')"><span class="icon">🌿</span><span>${nutrient}</span></div>`
             ).join('');
+
+            naturalGrid.innerHTML = Object.keys(db.naturalPrescriptions).map(key => {
+                const item = db.naturalPrescriptions[key];
+                return `<div class="search-item" onclick="showNaturalPrescriptionResult('${key}')">
+                            <span class="icon">${item.icon}</span>
+                            <span>${key}</span>
+                        </div>`
+            }).join('');
         }
+        
+        function generateNaturalPrescriptionsHTML(keys) {
+            if (!keys || keys.length === 0) {
+                return '';
+            }
+            const listItems = keys.map(key => {
+                const prescription = db.naturalPrescriptions[key];
+                return prescription ? `<li>${prescription.icon} ${key}</li>` : '';
+            }).join('');
+
+            return `
+                <h4>🧘‍♀️ 建議的自然處方</h4>
+                <ul class="natural-prescription-list">
+                    ${listItems}
+                </ul>
+            `;
+        }
+
 
         function showDrugResults(drug) {
             const data = db.drugs[drug];
             const resultsContent = document.getElementById('results-content');
             
+            const naturalPrescriptionsHTML = generateNaturalPrescriptionsHTML(data.naturalPrescriptions);
+
             resultsContent.innerHTML = `
                 <div class="result-card drug-card">
-                    <h3>💊 ${drug}</h3>
-                    ${data.examples ? `<h4>藥物名稱範例：</h4><ul>${data.examples.map(item => `<li>${item}</li>`).join('')}</ul>` : ''}
+                    <h3><span class="icon">💊</span> ${drug}</h3>
+                    ${data.examples.length > 0 ? `<h4>藥物名稱範例：</h4><ul>${data.examples.map(item => `<li>${item}</li>`).join('')}</ul>` : ''}
                     <h4>可能導致的副作用/後遺症：</h4>
                     <ul>${data.sideEffects.map(item => `<li>${item}</li>`).join('')}</ul>
                     <h4>作為「藥物盜匪」會消耗的營養素：</h4>
                     <ul>${data.depletedNutrients.map(item => `<li>${item}</li>`).join('')}</ul>
                     <h4>🌿 建議的營養補充與注意事項：</h4>
                     <ul>${data.solutions.map(item => `<li>${item}</li>`).join('')}</ul>
+                    ${naturalPrescriptionsHTML} 
                 </div>
             `;
             
@@ -670,14 +807,17 @@
                     </li>
                 `;
             }).join('');
+            
+            const naturalPrescriptionsHTML = generateNaturalPrescriptionsHTML(data.naturalPrescriptions);
 
             resultsContent.innerHTML = `
                 <div class="result-card symptom-card">
-                    <h3>🩺 症狀：${symptom}</h3>
+                    <h3><span class="icon">🩺</span> 症狀：${symptom}</h3>
                     <h4>可能的原因 (藥物或營養缺乏)：</h4>
                     <ul>${data.possibleCauses.map(item => `<li>${item}</li>`).join('')}</ul>
                     <h4>🌿 建議的營養補充方案：</h4>
                     <ul>${solutionsHTML}</ul>
+                    ${naturalPrescriptionsHTML}
                 </div>
             `;
             
@@ -691,7 +831,7 @@
             
             resultsContent.innerHTML = `
                 <div class="result-card nutrient-card">
-                    <h3>🌿 ${nutrient}</h3>
+                    <h3><span class="icon">🌿</span> ${nutrient}</h3>
                     <h4>重要性與主要作用：</h4>
                     <p>${data.importance}</p>
                     <h4>哪些藥物或生活方式會消耗它？</h4>
@@ -707,6 +847,36 @@
             
             showResults();
         }
+
+        // --- 修改：更新函式以顯示包含注意事項的結果 ---
+        function showNaturalPrescriptionResult(key) {
+            const data = db.naturalPrescriptions[key];
+            const resultsContent = document.getElementById('results-content');
+            
+            resultsContent.innerHTML = `
+                <div class="result-card natural-card">
+                    <h3><span class="icon">${data.icon}</span> ${key}</h3>
+                    <h4>重要性與主要作用：</h4>
+                    <p>${data.importance}</p>
+                    <h4>缺乏時可能出現的症狀：</h4>
+                    <ul>${data.deficiencySymptoms.map(item => `<li>${item}</li>`).join('')}</ul>
+                    <h4>可以怎麼做？</h4>
+                    <ul>
+                        <li><strong>📍 可以去哪裡：</strong>${data.prescription.where.join('、')}</li>
+                        <li><strong>⏱️ 花多久時間：</strong>${data.prescription.howLong}</li>
+                    </ul>
+                    <h4>🔔 適合時機與注意事項：</h4>
+                    <ul>
+                        <li><strong>☀️ 適合時機：</strong>${data.timingAndPrecautions.timing}</li>
+                        <li><strong>🎒 需要準備：</strong>${data.timingAndPrecautions.preparation}</li>
+                        <li><strong>⚠️ 注意事項：</strong>${data.timingAndPrecautions.reminders}</li>
+                    </ul>
+                </div>
+            `;
+
+            showResults();
+        }
+
 
         function showResults() {
             document.querySelector('.search-content').style.display = 'none';
